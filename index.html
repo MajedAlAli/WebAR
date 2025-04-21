@@ -1,25 +1,107 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>ar-demo</title>
-    <meta name="description" content="ar-demo">
-    <script src="https://aframe.io/releases/0.7.0/aframe.min.js"></script>
-    <!-- aframe extras -->
-    <!-- <script src="/cdn.rawgit.com/donmccurdy/aframe-extras/v3.12.4/dist/aframe-extras.min.js"></script> -->
-    <!-- webcomponentsjs -->
-    <!-- <script src="https://cdn.rawgit.com/webcomponents/webcomponentsjs/v0.7.24/webcomponents-lite.min.js"></script> -->
-    <!-- LRNWebComponents -->
-    <!-- <link href="https://cdn.rawgit.com/LRNWebComponents/build/0.2.0/build/default.css" rel="stylesheet"> -->
-    <!-- include ar.js for A-Frame -->
+    <title>AR Duck Demo</title>
+    <meta name="description" content="Interactive AR Duck Demo">
+    <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
     <script src="https://jeromeetienne.github.io/AR.js/aframe/build/aframe-ar.js"></script>
+    <!-- Add animation and interaction components -->
+    <script src="https://unpkg.com/aframe-animation-component@5.1.2/dist/aframe-animation-component.min.js"></script>
+    <script src="https://unpkg.com/aframe-event-set-component@5.0.0/dist/aframe-event-set-component.min.js"></script>
+    <style>
+        .arjs-loader {
+            height: 100%;
+            width: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            background-color: rgba(0, 0, 0, 0.8);
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-family: Arial;
+        }
+        .instructions {
+            position: absolute;
+            bottom: 20px;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            color: white;
+            background-color: rgba(0,0,0,0.5);
+            padding: 10px;
+            font-family: Arial;
+            z-index: 10000;
+        }
+    </style>
 </head>
 <body>
-    <a-scene embedded arjs>
-        <a-entity gltf-model="https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/Duck/glTF/Duck.gltf" scale="0.5 0.5 0.5">
-                <a-animation attribute="rotation" to="90 360 0" dur="5000"></a-animation>
+    <div class="arjs-loader">
+        <div>Loading AR experience...<br>Point camera at Hiro marker</div>
+    </div>
+    <div class="instructions">
+        Tap the duck to make it jump!
+    </div>
+
+    <a-scene 
+        embedded 
+        arjs="sourceType: webcam; detectionMode: mono_and_matrix; matrixCodeType: 3x3;"
+        cursor="rayOrigin: mouse"
+        raycaster="objects: [clickable]"
+        renderer="logarithmicDepthBuffer: true;">
+
+        <!-- Environment -->
+        <a-entity environment="preset: forest; dressingAmount: 500"></a-entity>
+
+        <!-- Marker Content -->
+        <a-marker preset="hiro">
+            <!-- Duck with multiple animations -->
+            <a-entity 
+                id="duck"
+                gltf-model="https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/Duck/glTF/Duck.gltf"
+                scale="0.5 0.5 0.5"
+                position="0 0.1 0"
+                rotation="0 180 0"
+                class="clickable"
+                animation__rotate="property: rotation; to: 0 540 0; dur: 5000; easing: linear; loop: true"
+                animation__float="property: position; dir: alternate; dur: 2000; to: 0 0.2 0; loop: true; easing: easeInOutSine"
+                event-set__click="_target: #duck; _delay: 0; animation__jump: property: position; to: 0 0.3 0; dur: 300; easing: easeOutQuad; dir: alternate; loop: 2">
             </a-entity>
-        </a-entity>
-        <a-marker-camera preset='hiro'></a-marker-camera>
+
+            <!-- Ground plane -->
+            <a-circle 
+                radius="0.5" 
+                rotation="-90 0 0" 
+                material="color: #333; shader: flat">
+            </a-circle>
+
+            <!-- Info text -->
+            <a-text 
+                value="AR Duck" 
+                color="black" 
+                position="0 0.5 0" 
+                align="center" 
+                scale="2 2 2">
+            </a-text>
+        </a-marker>
+
+        <!-- Lighting -->
+        <a-entity light="type: ambient; color: #BBB"></a-entity>
+        <a-entity light="type: directional; color: #FFF; intensity: 0.6" position="-0.5 1 1"></a-entity>
+
+        <!-- Camera -->
+        <a-entity camera></a-entity>
     </a-scene>
+
+    <script>
+        // Hide loader when AR is ready
+        document.querySelector('a-scene').addEventListener('loaded', function() {
+            setTimeout(function() {
+                document.querySelector('.arjs-loader').style.display = 'none';
+            }, 1500);
+        });
+    </script>
 </body>
 </html>

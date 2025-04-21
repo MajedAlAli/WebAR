@@ -5,7 +5,7 @@
     <title>AR Duck with Reverse Spin</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
-    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.min.js"></script>
+    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
     <style>
         .arjs-loader {
             height: 100%;
@@ -47,19 +47,38 @@
     <a-scene 
         vr-mode-ui="enabled: false"
         embedded 
-        arjs="sourceType: webcam; detectionMode: mono; debugUIEnabled: false"
+        arjs="sourceType: webcam; detectionMode: mono_and_matrix; matrixCodeType: 3x3;"
         cursor="rayOrigin: mouse"
-        raycaster="objects: .clickable">
+        raycaster="objects: [clickable]">
         
         <a-marker preset="hiro">
+            <!-- Duck with spin control -->
             <a-entity 
                 id="duck"
                 gltf-model="https://cdn.jsdelivr.net/gh/KhronosGroup/glTF-Sample-Models@master/2.0/Duck/glTF/Duck.gltf"
                 scale="0.5 0.5 0.5"
                 position="0 0.1 0"
                 rotation="0 0 0"
-                class="clickable"
-                animation__spin="property: rotation; to: 0 360 0; loop: true; dur: 4000; easing: linear">
+                class="clickable">
+                
+                <!-- Continuous rotation animation -->
+                <a-animation 
+                    id="spin-animation"
+                    attribute="rotation"
+                    to="0 360 0"
+                    dur="4000"
+                    easing="linear"
+                    repeat="indefinite">
+                </a-animation>
+                
+                <!-- Click feedback animation -->
+                <a-animation 
+                    attribute="scale"
+                    to="0.4 0.4 0.4"
+                    dur="100"
+                    direction="alternate"
+                    begin="click">
+                </a-animation>
             </a-entity>
         </a-marker>
         
@@ -67,37 +86,34 @@
     </a-scene>
 
     <script>
-        // Hide loader after A-Frame + AR.js fully initialize
-        document.querySelector('a-scene').addEventListener('loaded', function () {
-            setTimeout(function () {
+        // Hide loader when scene loads
+        document.querySelector('a-scene').addEventListener('loaded', function() {
+            setTimeout(function() {
                 document.querySelector('.arjs-loader').style.display = 'none';
-            }, 1000);
+            }, 1500);
         });
 
+        // Reverse spin direction on click
         const duck = document.querySelector('#duck');
-        let direction = 1;
-
-        duck.addEventListener('click', function () {
-            const currentRot = duck.getAttribute('rotation');
-            direction *= -1;
-
-            duck.setAttribute('animation__spin', {
-                property: 'rotation',
-                from: `0 ${currentRot.y} 0`,
-                to: `0 ${currentRot.y + 360 * direction} 0`,
-                loop: true,
-                dur: 4000,
-                easing: 'linear'
-            });
-
-            // Visual feedback (scale pulse)
-            duck.setAttribute('animation__click', {
-                property: 'scale',
-                to: '0.4 0.4 0.4',
-                dur: 150,
-                dir: 'alternate',
-                loop: false
-            });
+        duck.addEventListener('click', function() {
+            const spinAnim = document.querySelector('#spin-animation');
+            const currentRotation = duck.getAttribute('rotation');
+            
+            // Reverse animation direction
+            if (spinAnim.getAttribute('to') === '0 360 0') {
+                spinAnim.setAttribute('to', '0 -360 0');
+                spinAnim.setAttribute('from', `0 ${currentRotation.y} 0`);
+            } else {
+                spinAnim.setAttribute('to', '0 360 0');
+                spinAnim.setAttribute('from', `0 ${currentRotation.y} 0`);
+            }
+            
+            // Restart animation with new direction
+            spinAnim.emit('startAnimation');
+            
+            // Visual feedback
+            duck.setAttribute('scale', '0.45 0.45 0.45');
+            setTimeout(() => duck.setAttribute('scale', '0.5 0.5 0.5'), 100);
         });
     </script>
 </body>

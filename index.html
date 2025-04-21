@@ -5,7 +5,7 @@
     <title>AR Duck with Reverse Spin</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
-    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.min.js"></script>
     <style>
         .arjs-loader {
             height: 100%;
@@ -47,7 +47,7 @@
     <a-scene 
         vr-mode-ui="enabled: false"
         embedded 
-        arjs="sourceType: webcam; detectionMode: mono_and_matrix; matrixCodeType: 3x3;"
+        arjs="sourceType: webcam; detectionMode: mono; debugUIEnabled: false"
         cursor="rayOrigin: mouse"
         raycaster="objects: .clickable">
         
@@ -67,10 +67,11 @@
     </a-scene>
 
     <script>
+        // Hide loader after A-Frame + AR.js fully initialize
         document.querySelector('a-scene').addEventListener('loaded', function () {
             setTimeout(function () {
                 document.querySelector('.arjs-loader').style.display = 'none';
-            }, 1500);
+            }, 1000);
         });
 
         const duck = document.querySelector('#duck');
@@ -89,5 +90,15 @@
                 easing: 'linear'
             });
 
-            // Click scale feedback
+            // Visual feedback (scale pulse)
             duck.setAttribute('animation__click', {
+                property: 'scale',
+                to: '0.4 0.4 0.4',
+                dur: 150,
+                dir: 'alternate',
+                loop: false
+            });
+        });
+    </script>
+</body>
+</html>

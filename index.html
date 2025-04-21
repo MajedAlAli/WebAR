@@ -1,11 +1,12 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="utf-8">
     <title>AR Duck Demo</title>
-    <meta name="description" content="Interactive AR Duck Demo">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
-    <script src="https://jeromeetienne.github.io/AR.js/aframe/build/aframe-ar.js"></script>
-    <!-- Add animation and interaction components -->
+    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+    <!-- Required components for animations/interactivity -->
     <script src="https://unpkg.com/aframe-animation-component@5.1.2/dist/aframe-animation-component.min.js"></script>
     <script src="https://unpkg.com/aframe-event-set-component@5.0.0/dist/aframe-event-set-component.min.js"></script>
     <style>
@@ -24,40 +25,40 @@
             font-family: Arial;
         }
         .instructions {
-            position: absolute;
+            position: fixed;
             bottom: 20px;
             left: 0;
             width: 100%;
             text-align: center;
             color: white;
-            background-color: rgba(0,0,0,0.5);
+            background-color: rgba(0,0,0,0.7);
             padding: 10px;
             font-family: Arial;
             z-index: 10000;
+            pointer-events: none;
         }
     </style>
 </head>
 <body>
+    <!-- Loading Screen -->
     <div class="arjs-loader">
-        <div>Loading AR experience...<br>Point camera at Hiro marker</div>
+        <div>Loading AR...<br>Point camera at Hiro marker</div>
     </div>
-    <div class="instructions">
+
+    <!-- Instructions (visible only on mobile) -->
+    <div class="instructions" id="instructions">
         Tap the duck to make it jump!
     </div>
 
+    <!-- AR Scene -->
     <a-scene 
+        vr-mode-ui="enabled: false"
         embedded 
         arjs="sourceType: webcam; detectionMode: mono_and_matrix; matrixCodeType: 3x3;"
-        cursor="rayOrigin: mouse"
-        raycaster="objects: [clickable]"
-        renderer="logarithmicDepthBuffer: true;">
+        renderer="logarithmicDepthBuffer: true; antialias: true;">
 
-        <!-- Environment -->
-        <a-entity environment="preset: forest; dressingAmount: 500"></a-entity>
-
-        <!-- Marker Content -->
-        <a-marker preset="hiro">
-            <!-- Duck with multiple animations -->
+        <!-- Duck with animations -->
+        <a-marker preset="hiro" emitevents="true" cursor="rayOrigin: mouse">
             <a-entity 
                 id="duck"
                 gltf-model="https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/Duck/glTF/Duck.gltf"
@@ -65,43 +66,37 @@
                 position="0 0.1 0"
                 rotation="0 180 0"
                 class="clickable"
-                animation__rotate="property: rotation; to: 0 540 0; dur: 5000; easing: linear; loop: true"
+                animation__rotate="property: rotation; to: 0 540 0; dur: 5000; loop: true; easing: linear"
                 animation__float="property: position; dir: alternate; dur: 2000; to: 0 0.2 0; loop: true; easing: easeInOutSine"
-                event-set__click="_target: #duck; _delay: 0; animation__jump: property: position; to: 0 0.3 0; dur: 300; easing: easeOutQuad; dir: alternate; loop: 2">
+                event-set__mouseenter="scale: 0.55 0.55 0.55"
+                event-set__mouseleave="scale: 0.5 0.5 0.5"
+                event-set__click="scale: 0.4 0.4 0.4; scale: 0.5 0.5 0.5; _delay: 300">
+                <a-animation attribute="position" to="0 0.3 0" dur="300" begin="click" direction="alternate" fill="backwards"></a-animation>
             </a-entity>
 
             <!-- Ground plane -->
-            <a-circle 
-                radius="0.5" 
-                rotation="-90 0 0" 
-                material="color: #333; shader: flat">
-            </a-circle>
-
-            <!-- Info text -->
-            <a-text 
-                value="AR Duck" 
-                color="black" 
-                position="0 0.5 0" 
-                align="center" 
-                scale="2 2 2">
-            </a-text>
+            <a-circle radius="0.5" rotation="-90 0 0" material="color: #333; shader: flat"></a-circle>
         </a-marker>
-
-        <!-- Lighting -->
-        <a-entity light="type: ambient; color: #BBB"></a-entity>
-        <a-entity light="type: directional; color: #FFF; intensity: 0.6" position="-0.5 1 1"></a-entity>
 
         <!-- Camera -->
         <a-entity camera></a-entity>
     </a-scene>
 
     <script>
-        // Hide loader when AR is ready
+        // Hide loader when scene loads
         document.querySelector('a-scene').addEventListener('loaded', function() {
             setTimeout(function() {
                 document.querySelector('.arjs-loader').style.display = 'none';
             }, 1500);
         });
+
+        // Show instructions only on mobile
+        function isMobile() {
+            return /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        }
+        if (!isMobile()) {
+            document.getElementById('instructions').style.display = 'none';
+        }
     </script>
 </body>
 </html>

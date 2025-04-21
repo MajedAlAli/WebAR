@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Spinning AR Duck</title>
+    <title>AR Duck with Reverse Spin</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
@@ -41,7 +41,7 @@
     </div>
     
     <div class="instructions">
-        👆 TAP THE DUCK TO MAKE IT SPIN! 👆
+        👆 TAP THE DUCK TO REVERSE SPIN DIRECTION 👆
     </div>
 
     <a-scene 
@@ -52,22 +52,30 @@
         raycaster="objects: [clickable]">
         
         <a-marker preset="hiro">
-            <!-- Duck with click interaction -->
+            <!-- Duck with spin control -->
             <a-entity 
                 id="duck"
-                gltf-model="https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/Duck/glTF/Duck.gltf"
+                gltf-model="https://cdn.jsdelivr.net/gh/KhronosGroup/glTF-Sample-Models@master/2.0/Duck/glTF/Duck.gltf"
                 scale="0.5 0.5 0.5"
                 position="0 0.1 0"
-                rotation="0 180 0"
-                class="clickable"
-                animation__spin="property: rotation; to: 0 540 0; dur: 5000; loop: true; easing: linear">
+                rotation="0 0 0"
+                class="clickable">
                 
-                <!-- Visual feedback on click -->
+                <!-- Continuous rotation animation -->
+                <a-animation 
+                    id="spin-animation"
+                    attribute="rotation"
+                    to="0 360 0"
+                    dur="4000"
+                    easing="linear"
+                    repeat="indefinite">
+                </a-animation>
+                
+                <!-- Click feedback animation -->
                 <a-animation 
                     attribute="scale"
-                    from="0.5 0.5 0.5"
                     to="0.4 0.4 0.4"
-                    dur="200"
+                    dur="100"
                     direction="alternate"
                     begin="click">
                 </a-animation>
@@ -88,21 +96,24 @@
         // Reverse spin direction on click
         const duck = document.querySelector('#duck');
         duck.addEventListener('click', function() {
-            // Get current rotation
+            const spinAnim = document.querySelector('#spin-animation');
             const currentRotation = duck.getAttribute('rotation');
             
-            // Reverse spin direction
-            const anim = duck.components['animation__spin'];
-            if (anim) {
-                const currentTo = anim.data.to;
-                anim.data.to = `${currentRotation.x} ${currentRotation.y + 180} ${currentRotation.z}`;
-                anim.data.from = `${currentRotation.x} ${currentRotation.y} ${currentRotation.z}`;
-                anim.startAnimation();
+            // Reverse animation direction
+            if (spinAnim.getAttribute('to') === '0 360 0') {
+                spinAnim.setAttribute('to', '0 -360 0');
+                spinAnim.setAttribute('from', `0 ${currentRotation.y} 0`);
+            } else {
+                spinAnim.setAttribute('to', '0 360 0');
+                spinAnim.setAttribute('from', `0 ${currentRotation.y} 0`);
             }
             
-            // Visual "pop" effect
+            // Restart animation with new direction
+            spinAnim.emit('startAnimation');
+            
+            // Visual feedback
             duck.setAttribute('scale', '0.45 0.45 0.45');
-            setTimeout(() => duck.setAttribute('scale', '0.5 0.5 0.5'), 200);
+            setTimeout(() => duck.setAttribute('scale', '0.5 0.5 0.5'), 100);
         });
     </script>
 </body>

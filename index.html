@@ -2,13 +2,13 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>AR Duck Demo</title>
+    <title>AR Jumping Duck</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
-    <!-- Required components for animations/interactivity -->
     <script src="https://unpkg.com/aframe-animation-component@5.1.2/dist/aframe-animation-component.min.js"></script>
     <script src="https://unpkg.com/aframe-event-set-component@5.0.0/dist/aframe-event-set-component.min.js"></script>
+    
     <style>
         .arjs-loader {
             height: 100%;
@@ -37,28 +37,36 @@
             z-index: 10000;
             pointer-events: none;
         }
+        .jump-effect {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0) 70%);
+            opacity: 0;
+            pointer-events: none;
+            z-index: 9998;
+        }
     </style>
 </head>
 <body>
-    <!-- Loading Screen -->
     <div class="arjs-loader">
         <div>Loading AR...<br>Point camera at Hiro marker</div>
     </div>
-
-    <!-- Instructions (visible only on mobile) -->
+    
     <div class="instructions" id="instructions">
-        Tap the duck to make it jump!
+        👆 Tap the duck to make it jump!
     </div>
+    
+    <div class="jump-effect" id="jumpEffect"></div>
 
-    <!-- AR Scene -->
     <a-scene 
         vr-mode-ui="enabled: false"
         embedded 
         arjs="sourceType: webcam; detectionMode: mono_and_matrix; matrixCodeType: 3x3;"
         renderer="logarithmicDepthBuffer: true; antialias: true;">
 
-        <!-- Duck with animations -->
         <a-marker preset="hiro" emitevents="true" cursor="rayOrigin: mouse">
+            <!-- Duck with enhanced jump animation -->
             <a-entity 
                 id="duck"
                 gltf-model="https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/Duck/glTF/Duck.gltf"
@@ -67,18 +75,38 @@
                 rotation="0 180 0"
                 class="clickable"
                 animation__rotate="property: rotation; to: 0 540 0; dur: 5000; loop: true; easing: linear"
-                animation__float="property: position; dir: alternate; dur: 2000; to: 0 0.2 0; loop: true; easing: easeInOutSine"
-                event-set__mouseenter="scale: 0.55 0.55 0.55"
-                event-set__mouseleave="scale: 0.5 0.5 0.5"
-                event-set__click="scale: 0.4 0.4 0.4; scale: 0.5 0.5 0.5; _delay: 300">
-                <a-animation attribute="position" to="0 0.3 0" dur="300" begin="click" direction="alternate" fill="backwards"></a-animation>
+                animation__float="property: position; dir: alternate; dur: 2000; to: 0 0.2 0; loop: true; easing: easeInOutSine">
+                
+                <!-- Bigger, clearer jump animation -->
+                <a-animation attribute="position" 
+                            to="0 0.4 0" 
+                            dur="400" 
+                            begin="click" 
+                            direction="alternate" 
+                            fill="backwards"
+                            easing="easeOutQuad"
+                            id="duckJump"></a-animation>
+                
+                <!-- Squash effect when landing -->
+                <a-animation attribute="scale" 
+                            to="0.6 0.4 0.6" 
+                            dur="200" 
+                            begin="click" 
+                            direction="alternate"
+                            fill="backwards"
+                            easing="easeOutQuad"></a-animation>
             </a-entity>
 
-            <!-- Ground plane -->
-            <a-circle radius="0.5" rotation="-90 0 0" material="color: #333; shader: flat"></a-circle>
+            <!-- Shadow that reacts to jump -->
+            <a-circle 
+                id="shadow"
+                radius="0.3" 
+                rotation="-90 0 0" 
+                material="color: #333; opacity: 0.5; shader: flat"
+                animation__shadow="property: radius; to: 0.2; dur: 400; begin: click; direction: alternate; easing: easeOutQuad">
+            </a-circle>
         </a-marker>
 
-        <!-- Camera -->
         <a-entity camera></a-entity>
     </a-scene>
 
@@ -97,6 +125,14 @@
         if (!isMobile()) {
             document.getElementById('instructions').style.display = 'none';
         }
+
+        // Add visual feedback on jump
+        document.querySelector('a-scene').addEventListener('click', function() {
+            const effect = document.getElementById('jumpEffect');
+            effect.style.opacity = '0.8';
+            effect.style.transition = 'opacity 0.3s';
+            setTimeout(() => { effect.style.opacity = '0'; }, 300);
+        });
     </script>
 </body>
 </html>
